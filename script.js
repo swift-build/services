@@ -78,6 +78,11 @@ document.querySelectorAll('.skill-category').forEach((category, index) => {
     observer.observe(category);
 });
 
+// Stagger skill items animation
+document.querySelectorAll('.skill-item').forEach((item, index) => {
+    item.style.animationDelay = `${index * 0.05}s`;
+});
+
 // Contact Form Handler
 const contactForm = document.getElementById('contactForm');
 
