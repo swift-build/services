@@ -83,6 +83,50 @@ document.querySelectorAll('.skill-item').forEach((item, index) => {
     item.style.animationDelay = `${index * 0.05}s`;
 });
 
+// Enable touch/click toggles only on touch/coarse pointer devices
+const isTouchLike = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+if (isTouchLike) {
+    // Touch/click toggle for skill categories (mobile-friendly)
+    document.querySelectorAll('.skill-category h3').forEach((title) => {
+        title.style.cursor = 'pointer';
+        title.addEventListener('click', (e) => {
+            const category = e.currentTarget.closest('.skill-category');
+            if (!category) return;
+            // Close other categories
+            document.querySelectorAll('.skill-category.open').forEach((openCat) => {
+                if (openCat !== category) openCat.classList.remove('open');
+            });
+            // Toggle current
+            category.classList.toggle('open');
+        });
+    });
+
+    // Touch/click toggle for About highlight cards
+    document.querySelectorAll('.highlight-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+            const card = e.currentTarget;
+            // Close others in the same grid
+            document.querySelectorAll('.highlight-item.open').forEach((openItem) => {
+                if (openItem !== card) openItem.classList.remove('open');
+            });
+            card.classList.toggle('open');
+        });
+    });
+
+    // Touch/click toggle for Process step cards
+    document.querySelectorAll('.step').forEach((step) => {
+        step.addEventListener('click', (e) => {
+            const current = e.currentTarget;
+            // Close other steps
+            document.querySelectorAll('.step.open').forEach((openStep) => {
+                if (openStep !== current) openStep.classList.remove('open');
+            });
+            current.classList.toggle('open');
+        });
+    });
+}
+
 // Contact Form Handler
 const contactForm = document.getElementById('contactForm');
 

@@ -50,12 +50,25 @@ body {
 }
 
 .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0rem;
     font-size: 1.5rem;
     font-weight: 800;
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary);
+}
+
+.brand-text {
+    position: relative;
+    top: 15px;
+    z-index: 1;
+}
+
+
+.brand-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
 }
 
 .nav-menu {
@@ -70,6 +83,7 @@ body {
     font-weight: 500;
     transition: var(--transition);
     position: relative;
+    top: 10px;
 }
 
 .nav-menu a::after {
@@ -1022,4 +1036,3 @@ html {
     background: var(--dark);
     color: var(--primary);
 }
-
