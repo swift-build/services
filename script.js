@@ -78,29 +78,44 @@ document.querySelectorAll('.skill-category').forEach((category, index) => {
     observer.observe(category);
 });
 
-// Stagger skill items animation
-document.querySelectorAll('.skill-item').forEach((item, index) => {
-    item.style.animationDelay = `${index * 0.05}s`;
+// Show more/less functionality for skills
+document.querySelectorAll('.show-more-btn').forEach(button => {
+    // Store references to hidden skills on initialization
+    const category = button.closest('.skill-category');
+    const allSkills = category.querySelectorAll('.skill-item');
+    const hiddenSkillsArray = Array.from(allSkills).filter(skill => skill.classList.contains('hidden-skill'));
+    
+    // Hide button if no hidden skills
+    if (hiddenSkillsArray.length === 0) {
+        button.style.display = 'none';
+        return;
+    }
+    
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (this.textContent === 'Show more') {
+            // Show hidden skills
+            hiddenSkillsArray.forEach(skill => {
+                skill.classList.remove('hidden-skill');
+            });
+            this.textContent = 'Show less';
+            this.classList.add('active');
+        } else {
+            // Hide skills again
+            hiddenSkillsArray.forEach(skill => {
+                skill.classList.add('hidden-skill');
+            });
+            this.textContent = 'Show more';
+            this.classList.remove('active');
+        }
+    });
 });
 
 // Enable touch/click toggles only on touch/coarse pointer devices
 const isTouchLike = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
 if (isTouchLike) {
-    // Touch/click toggle for skill categories (mobile-friendly)
-    document.querySelectorAll('.skill-category h3').forEach((title) => {
-        title.style.cursor = 'pointer';
-        title.addEventListener('click', (e) => {
-            const category = e.currentTarget.closest('.skill-category');
-            if (!category) return;
-            // Close other categories
-            document.querySelectorAll('.skill-category.open').forEach((openCat) => {
-                if (openCat !== category) openCat.classList.remove('open');
-            });
-            // Toggle current
-            category.classList.toggle('open');
-        });
-    });
 
     // Touch/click toggle for About highlight cards
     document.querySelectorAll('.highlight-item').forEach((item) => {
@@ -258,6 +273,149 @@ if ('IntersectionObserver' in window) {
         imageObserver.observe(img);
     });
 }
+
+// Projects Carousel
+const carouselTrack = document.querySelector('.carousel-track');
+const carouselDots = document.querySelector('.carousel-dots');
+const projectCards = document.querySelectorAll('.carousel-track .project-card');
+
+let currentIndex = 0;
+let autoplayInterval;
+const AUTOPLAY_DELAY = 5000; // 5 seconds
+
+// Calculate how many cards to show at once based on screen size
+function getCardsPerView() {
+    if (window.innerWidth <= 480) return 1;
+    if (window.innerWidth <= 768) return 2;
+    return 3;
+}
+
+// Calculate total number of slides
+function getTotalSlides() {
+    const cardsPerView = getCardsPerView();
+    return Math.ceil(projectCards.length / cardsPerView);
+}
+
+// Create dots
+function createDots() {
+    const totalSlides = getTotalSlides();
+    carouselDots.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('button');
+        dot.classList.add('carousel-dot');
+        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(i));
+        carouselDots.appendChild(dot);
+    }
+}
+
+// Update carousel position
+function updateCarousel() {
+    const cardsPerView = getCardsPerView();
+    const firstCard = carouselTrack.querySelector('.project-card');
+    if (!firstCard) return;
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    // Read actual CSS gap
+    const computed = window.getComputedStyle(carouselTrack);
+    let gap = parseFloat(computed.gap || computed.columnGap || '0');
+    if (Number.isNaN(gap)) gap = 0;
+    const moveAmount = (cardWidth + gap) * cardsPerView;
+    
+    carouselTrack.style.transform = `translateX(-${currentIndex * moveAmount}px)`;
+    
+    // Update dots
+    const dots = document.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentIndex);
+    });
+}
+
+// Go to specific slide
+function goToSlide(index) {
+    const totalSlides = getTotalSlides();
+    currentIndex = index;
+    if (currentIndex >= totalSlides) currentIndex = 0;
+    if (currentIndex < 0) currentIndex = totalSlides - 1;
+    updateCarousel();
+    resetAutoplay();
+}
+
+// Next slide
+function nextSlide() {
+    const totalSlides = getTotalSlides();
+    currentIndex++;
+    if (currentIndex >= totalSlides) currentIndex = 0;
+    updateCarousel();
+}
+
+// Previous slide
+function prevSlide() {
+    const totalSlides = getTotalSlides();
+    currentIndex--;
+    if (currentIndex < 0) currentIndex = totalSlides - 1;
+    updateCarousel();
+    resetAutoplay();
+}
+
+// Start autoplay
+function startAutoplay() {
+    autoplayInterval = setInterval(nextSlide, AUTOPLAY_DELAY);
+}
+
+// Stop autoplay
+function stopAutoplay() {
+    clearInterval(autoplayInterval);
+}
+
+// Reset autoplay (stop and start again)
+function resetAutoplay() {
+    stopAutoplay();
+    startAutoplay();
+}
+
+// No manual buttons (auto + dots only)
+
+// Pause autoplay on hover
+carouselTrack.addEventListener('mouseenter', stopAutoplay);
+carouselTrack.addEventListener('mouseleave', startAutoplay);
+
+// Handle window resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        createDots();
+        currentIndex = 0;
+        updateCarousel();
+    }, 250);
+});
+
+// Initialize carousel
+if (projectCards.length > 0) {
+    createDots();
+    updateCarousel();
+    startAutoplay();
+}
+
+// Read more/less for project descriptions
+document.querySelectorAll('.project-description').forEach((desc) => {
+    // Only add toggle if content overflows (clamped)
+    const isOverflowing = desc.scrollHeight > desc.clientHeight + 1;
+    if (!isOverflowing) return;
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'read-more-toggle';
+    toggle.textContent = '...more';
+    toggle.addEventListener('click', () => {
+        const expanded = desc.classList.toggle('expanded');
+        toggle.textContent = expanded ? 'less' : '...more';
+    });
+
+    // Insert after the description paragraph
+    desc.insertAdjacentElement('afterend', toggle);
+});
 
 console.log('🚀 Website loaded with AI assistance!');
 
