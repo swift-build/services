@@ -278,6 +278,7 @@ if ('IntersectionObserver' in window) {
 const carouselTrack = document.querySelector('.carousel-track');
 const carouselDots = document.querySelector('.carousel-dots');
 const projectCards = document.querySelectorAll('.carousel-track .project-card');
+const carouselElement = document.querySelector('.carousel');
 
 let currentIndex = 0;
 let autoplayInterval;
@@ -396,6 +397,46 @@ if (projectCards.length > 0) {
     createDots();
     updateCarousel();
     startAutoplay();
+}
+
+// React to mouse/trackpad scroll for horizontal navigation (with wraparound)
+if (carouselElement) {
+    let wheelDeltaAccum = 0;
+    const WHEEL_THRESHOLD = 40; // pixels; tune for sensitivity
+    let isAnimating = false;
+
+    // Mark animation state using transitionend from the track
+    carouselTrack.addEventListener('transitionend', () => {
+        isAnimating = false;
+    });
+
+    const onWheel = (e) => {
+        // Prefer horizontal delta when available (trackpads), else use vertical
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+
+        // If currently animating, let the page scroll normally
+        if (isAnimating) return;
+
+        // Accumulate to avoid advancing too fast on high-resolution wheels
+        wheelDeltaAccum += delta;
+
+        if (Math.abs(wheelDeltaAccum) >= WHEEL_THRESHOLD) {
+            isAnimating = true;
+            if (wheelDeltaAccum > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+            wheelDeltaAccum = 0;
+            resetAutoplay();
+            // Prevent page scroll only when we actually consume the gesture
+            e.preventDefault();
+        }
+        // Otherwise, do not preventDefault so vertical page scroll remains smooth
+    };
+
+    // Use non-passive to allow preventDefault when a slide is triggered
+    carouselElement.addEventListener('wheel', onWheel, { passive: false });
 }
 
 // Read more/less for project descriptions
