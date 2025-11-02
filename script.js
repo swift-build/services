@@ -439,6 +439,78 @@ if (carouselElement) {
     carouselElement.addEventListener('wheel', onWheel, { passive: false });
 }
 
+// Touch/swipe handling for mobile carousel
+if (carouselElement && carouselTrack) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let isDragging = false;
+    let isHorizontalSwipe = false;
+    const SWIPE_THRESHOLD = 50; // Minimum swipe distance in pixels
+
+    carouselTrack.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isDragging = true;
+        isHorizontalSwipe = false;
+        stopAutoplay();
+    }, { passive: true });
+
+    carouselTrack.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const deltaX = Math.abs(currentX - touchStartX);
+        const deltaY = Math.abs(currentY - touchStartY);
+        
+        // Determine if this is a horizontal swipe
+        if (deltaX > 10 && deltaX > deltaY) {
+            isHorizontalSwipe = true;
+            // Prevent vertical scroll when swiping horizontally
+            e.preventDefault();
+        }
+        
+        touchEndX = currentX;
+    }, { passive: false });
+
+    carouselTrack.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        
+        const swipeDistance = touchStartX - touchEndX;
+        const absSwipeDistance = Math.abs(swipeDistance);
+
+        // Only trigger swipe if it was a horizontal gesture and distance is significant
+        if (isHorizontalSwipe && absSwipeDistance > SWIPE_THRESHOLD) {
+            if (swipeDistance > 0) {
+                // Swiped left - next slide
+                nextSlide();
+            } else {
+                // Swiped right - previous slide
+                prevSlide();
+            }
+            resetAutoplay();
+        }
+
+        // Reset touch state
+        touchStartX = 0;
+        touchStartY = 0;
+        touchEndX = 0;
+        isDragging = false;
+        isHorizontalSwipe = false;
+    }, { passive: true });
+
+    // Handle touch cancel (e.g., if user moves finger off screen)
+    carouselTrack.addEventListener('touchcancel', () => {
+        touchStartX = 0;
+        touchStartY = 0;
+        touchEndX = 0;
+        isDragging = false;
+        isHorizontalSwipe = false;
+        startAutoplay();
+    }, { passive: true });
+}
+
 // Read more/less for project descriptions
 document.querySelectorAll('.project-description').forEach((desc) => {
     // Only add toggle if content overflows (clamped)
