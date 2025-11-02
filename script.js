@@ -458,5 +458,23 @@ document.querySelectorAll('.project-description').forEach((desc) => {
     desc.insertAdjacentElement('afterend', toggle);
 });
 
+// FAQ Accordion Toggle
+document.querySelectorAll('.faq-question').forEach(question => {
+    question.addEventListener('click', () => {
+        const faqItem = question.parentElement;
+        const isActive = faqItem.classList.contains('active');
+        
+        // Close all FAQ items
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Open clicked item if it wasn't active
+        if (!isActive) {
+            faqItem.classList.add('active');
+        }
+    });
+});
+
 console.log('🚀 Website loaded with AI assistance!');
 
